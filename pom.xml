@@ -13,5 +13,30 @@
         <module>web-work-bench-web</module>
     </modules>
 
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <artifactId>web-work-bench-web</artifactId>
+                <groupId>org.webworkbench</groupId>
+                <version>1.0-SNAPSHOT</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>1.8</source><!-- 源代码使用的JDK版本 -->
+                    <target>1.8</target><!-- 需要生成的目标class文件的编译版本 -->
+                    <!-- JDK8版本后支持反射获取参数 -->
+                    <compilerArgument>-parameters</compilerArgument><!-- 打包携带的参数 -->
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
 
 </project>
