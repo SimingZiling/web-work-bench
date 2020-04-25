@@ -12,7 +12,7 @@ public class Controller {
     /**
      * 请求方法列表
      */
-    private static Map<String , Method> requestMethodMap = new HashMap<>();
+    private static Map<String , Method> requestMethodMap = new HashMap<String, Method>();
 
     /**
      * 获取请求方法
