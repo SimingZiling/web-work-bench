@@ -3,9 +3,13 @@ package org.webworkbench.netty.handler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.http.FullHttpRequest;
-//import io.netty.handler.codec.http.HttpMethod;
+import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpMethod;
 import org.webworkbench.web.request.HttpRequest;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class HttpServerHandler extends ChannelInboundHandlerAdapter {
 
@@ -16,6 +20,19 @@ public class HttpServerHandler extends ChannelInboundHandlerAdapter {
             FullHttpRequest fullHttpRequest = (FullHttpRequest) msg;
             // 封装请求方法
             packageRequestMethod(httpRequest,fullHttpRequest.method());
+            // 添加通一资源标志符
+            httpRequest.setUri(fullHttpRequest.uri());
+
+            // 设置请求头
+            Map<String,String> headerMap = new HashMap<String,String>();
+            for (Map.Entry<String,String> header : fullHttpRequest.headers().entries()){
+                headerMap.put(header.getKey(),header.getValue());
+            }
+            httpRequest.setHeaders(headerMap);
+
+
+            System.out.println(httpRequest.getHeaders().get("Accept-Encoding"));
+            System.out.println(httpRequest.getUri());
             System.out.println("2222"+httpRequest.getMethod().getMethod());
             System.out.println("该请求为Http请求");
         }
