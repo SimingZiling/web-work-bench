@@ -21,5 +21,10 @@
             <artifactId>web-work-bench-web</artifactId>
             <groupId>org.webworkbench</groupId>
         </dependency>
+
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>fastjson</artifactId>
+        </dependency>
     </dependencies>
 </project>

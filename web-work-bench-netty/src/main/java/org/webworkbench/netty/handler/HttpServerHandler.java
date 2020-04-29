@@ -18,55 +18,29 @@ public class HttpServerHandler extends ChannelInboundHandlerAdapter {
         HttpRequest httpRequest = new HttpRequest();
         if (msg instanceof FullHttpRequest) {
             FullHttpRequest fullHttpRequest = (FullHttpRequest) msg;
+
             // 封装请求方法
-            packageRequestMethod(httpRequest,fullHttpRequest.method());
-            // 添加通一资源标志符
+            httpRequest.setMethod(RequestParser.method(fullHttpRequest));
+
+            // 添加统一资源标志符
             httpRequest.setUri(fullHttpRequest.uri());
 
+            // 获取请求路径
+            httpRequest.setPath(RequestParser.path(fullHttpRequest));
+
             // 获取请求头
-            Map<String,String> headerMap = new HashMap<String,String>();
-            for (Map.Entry<String,String> header : fullHttpRequest.headers().entries()){
-                headerMap.put(header.getKey(),header.getValue());
-            }
-            httpRequest.setHeaders(headerMap);
+            httpRequest.setHeaders(RequestParser.headers(fullHttpRequest));
 
-            System.out.println(new RequestParser(fullHttpRequest).bodyParse());
+            // 请求参数
+            httpRequest.setParameter(RequestParser.parm(fullHttpRequest));
 
 
-            System.out.println(httpRequest.getHeaders());
-            System.out.println(httpRequest.getUri());
-            System.out.println("2222"+httpRequest.getMethod().getMethod());
+            System.out.println(RequestParser.bodyParse(fullHttpRequest));
             System.out.println("该请求为Http请求");
         }
     }
 
 
-    /**
-     * 封装请求方法
-     */
-    private void packageRequestMethod(HttpRequest httpRequest,HttpMethod method){
-        if(method.equals(HttpMethod.POST)){
-            httpRequest.setMethod(org.webworkbench.web.request.HttpMethod.POST);
-        }else if(method.equals(HttpMethod.PUT)){
-            httpRequest.setMethod(org.webworkbench.web.request.HttpMethod.PUT);
-        }else if(method.equals(HttpMethod.GET)){
-            httpRequest.setMethod(org.webworkbench.web.request.HttpMethod.GET);
-        }else if(method.equals(HttpMethod.DELETE)){
-            httpRequest.setMethod(org.webworkbench.web.request.HttpMethod.DELETE);
-        }else if(method.equals(HttpMethod.PATCH)){
-            httpRequest.setMethod(org.webworkbench.web.request.HttpMethod.PATCH);
-        }else if(method.equals(HttpMethod.TRACE)){
-            httpRequest.setMethod(org.webworkbench.web.request.HttpMethod.TRACE);
-        }else if(method.equals(HttpMethod.CONNECT)){
-            httpRequest.setMethod(org.webworkbench.web.request.HttpMethod.CONNECT);
-        }else if(method.equals(HttpMethod.OPTIONS)){
-            httpRequest.setMethod(org.webworkbench.web.request.HttpMethod.OPTIONS);
-        }else if(method.equals(HttpMethod.HEAD)){
-            httpRequest.setMethod(org.webworkbench.web.request.HttpMethod.HEAD);
-        }else {
-            System.err.println("未知请求！"+method.name());
-        }
-    }
 }
 
 

@@ -1,5 +1,6 @@
 package org.webworkbench.web.request;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -21,6 +22,16 @@ public class HttpRequest {
      * 请求头
      */
     private Map<String, String> headers;
+
+    /**
+     * 请求路径
+     */
+    private String path;
+
+    /**
+     * 请求参数
+     */
+    private Map<String, List<String>> parameter;
 
     public HttpMethod getMethod() {
         return method;
@@ -44,5 +55,21 @@ public class HttpRequest {
 
     public void setHeaders(Map<String, String> headers) {
         this.headers = headers;
+    }
+
+    public String getPath() {
+        return path;
+    }
+
+    public void setPath(String path) {
+        this.path = path;
+    }
+
+    public Map<String, List<String>> getParameter() {
+        return parameter;
+    }
+
+    public void setParameter(Map<String, List<String>> parameter) {
+        this.parameter = parameter;
     }
 }
