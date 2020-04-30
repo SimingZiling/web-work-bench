@@ -9,11 +9,12 @@ import org.webworkbench.netty.common.ContentType;
 import org.webworkbench.netty.converter.PrimitiveType;
 import org.webworkbench.web.request.HttpMethod;
 
+import javax.management.ObjectName;
+import java.lang.ref.PhantomReference;
 import java.lang.reflect.Array;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.rmi.MarshalledObject;
+import java.security.Key;
+import java.util.*;
 
 /**
  * 请求解析
@@ -89,91 +90,111 @@ public class RequestParser {
         }
     }
 
-    public static Map<String,List<String>> bodyParse(FullHttpRequest fullHttpRequest){
-        Map<String, List<String>> paramMap = new HashMap<>();
+    /**
+     * 请求提解析
+     * @param fullHttpRequest 完整请求
+     * @return 请求参数
+     */
+    public static Map<String,Object> body(FullHttpRequest fullHttpRequest){
         String contentType = getContentType(fullHttpRequest.headers());
-        //  判断内容类型
+        // 判断内容的类型
         if(ContentType.APPLICATION_JSON.toString().equals(contentType)){
-            // 获取内容冰转成json格式
-            String jsonStr = fullHttpRequest.content().toString(CharsetUtil.UTF_8);
-            JSONObject obj = JSON.parseObject(jsonStr);
-            // 遍历json数据
-            for (Map.Entry<String,Object> item : obj.entrySet()){
-                // 获取Key与value
-                String key = item.getKey();
-                Object value = item.getValue();
-                Class<?> valueType = value.getClass();
-
-                System.out.println("KEY为"+key+"的数据类型为"+valueType.getName());
-
-                // 判断数据是否已经存在
-                List<String> valueList;
-                if(paramMap.containsKey(key)){
-                    valueList = paramMap.get(key);
-                }else{
-                    valueList = new ArrayList<String>();
-                }
-                // 判断是否为基础类型
-                if(PrimitiveType.isPriType(valueType)){
-                    valueList.add(value.toString());
-                    paramMap.put(key, valueList);
-                }else
-                    // 判断类型是否为数组
-                    if(valueType.isArray()){
-                    int length = Array.getLength(value);
-                    for(int i=0; i<length; i++){
-                        String arrayItem = String.valueOf(Array.get(value, i));
-                        valueList.add(arrayItem);
-                    }
-                    paramMap.put(key, valueList);
-                }else
-                    // 判断数据是否为列表
-                    if(JSONObject.class.isAssignableFrom(valueType)){
-//                        if(valueType.equals(JSONArray.class)){
-//                            JSONArray jArray = JSONArray.parseArray(value.toString());
-//                            for(int i=0; i<jArray.size(); i++){
-//                                valueList.add(jArray.getString(i));
-//                            }
-//                        }else{
-//                            valueList = (ArrayList<String>) value;
-//                        }
-//                        paramMap.put(key, valueList);
-                }else
-                    // 判断数据是否为map
-                    if(Map.class.isAssignableFrom(valueType)){
-                        Map<String, String> tempMap = (Map<String, String>) value;
-                        for(Map.Entry<String, String> entry : tempMap.entrySet()){
-                            List<String> tempList = new ArrayList<String>();
-                            tempList.add(entry.getValue());
-                            paramMap.put(entry.getKey(), tempList);
-                        }
-                    }
-            }
+            // 内容为json格式
+            String paramJsonStr = fullHttpRequest.content().toString(CharsetUtil.UTF_8);
+            // 转换为json对象数据
+//            JSONObject paramJsonObject = JSON.parseObject(paramJsonStr);
+//            return jsonObjectToMap(paramJsonObject);
+            // 一行代码搞定
+            return JSON.parseObject(paramJsonStr,Map.class);
         }
-        return paramMap;
+        return null;
     }
 
-//    public Map<String, Object> bodyParse() throws IOException {
-//        Map<String, Object> bodyMap = new HashMap<>();
-//        if(!fullHttpRequest.method().equals(HttpMethod.GET)){
-//            HttpPostRequestDecoder decoder = new HttpPostRequestDecoder(fullHttpRequest);
-//            decoder.offer(fullHttpRequest);
-//            List<InterfaceHttpData> bodyList = decoder.getBodyHttpDatas();
-//            for (InterfaceHttpData body : bodyList) {
-//                if(body instanceof FileUpload){
-//                    FileUpload file =  (FileUpload) body;
-//                    bodyMap.put(file.getName(),file.getFile().getCanonicalFile());
-////                    System.out.println(file.getName());
-////                    System.out.println(file.getFile());
-//                }else {
-//                    Attribute data = (Attribute) body;
-//                    bodyMap.put(data.getName(), data.getValue());
-//                }
-//            }
-//            return bodyMap;
-//        }
-//        return null;
-//    }
+    /**
+     * json转换为map数据
+     * @param jsonObject json数据
+     * @return map对象
+     */
+    private static Map<String,Object> jsonObjectToMap(JSONObject jsonObject){
+        Map<String, Object> map = new HashMap<>();
+        // 遍历json对象
+        for (Map.Entry<String,Object> item : jsonObject.entrySet()){
+            String key = item.getKey();
+            Object value = item.getValue();
+            // 获取值类型
+            Class<?> valueType = value.getClass();
+
+//             判断数据是否已经存在
+            List<Object> valueList = null;
+            if(map.containsKey(key)){
+                valueList = new ArrayList<>();
+                valueList.add(map.get(key));
+            }
+
+            // 判断数据类型
+            if(PrimitiveType.isPriType(valueType)){
+                // 数据为基础类型
+                if(valueList != null){
+                    valueList.add(value.toString());
+                    map.put(key, valueList);
+                }else{
+                    map.put(key,value.toString());
+                }
+                
+            }else if(valueType.isArray()) {
+                // 判断类型是否为数组
+                if(valueList == null){
+                    valueList = new ArrayList<>();
+                }
+                for (int i = 0; i < Array.getLength(value); i++) {
+                    valueList.add(Array.get(value, i));
+                }
+                map.put(key, valueList);
+            }else if(JSONObject.class.isAssignableFrom(valueType)){
+
+                if(valueList != null) {
+                    valueList.add(jsonObjectToMap((JSONObject) value));
+                    map.put(key, valueList);
+                }else {
+                    map.put(key,jsonObjectToMap((JSONObject) value));
+                }
+            }else if(JSONArray.class.isAssignableFrom(valueType)){
+               map.put(key,jsonArrayToList((JSONArray) value));
+            }
+        }
+        return map;
+    }
+
+    /**
+     * JSON数组转列表
+     * @param jsonArray json数组
+     * @return 列表
+     */
+    private static List<Object> jsonArrayToList(JSONArray jsonArray){
+        List<Object> list = new ArrayList<>();
+        // 遍历json数组
+        for (Object value : jsonArray) {
+            // 获取数组中元素对象
+            Class<?> valueType = value.getClass();
+            // 判断元素对象
+            if (PrimitiveType.isPriType(valueType)) {
+                // 如果元素对象为基础对象则直接添加
+                list.add(value);
+            } else if (valueType.isArray()) {
+                // 如果元素对象为列表 则遍历出来之后添加
+                for (int j = 0; j < Array.getLength(value); j++) {
+                    list.add(Array.get(value, j));
+                }
+            } else if (JSONObject.class.isAssignableFrom(valueType)) {
+                // 如果元素为json 则读取json数并保存
+                list.add(jsonObjectToMap((JSONObject) value));
+            } else if (JSONArray.class.isAssignableFrom(valueType)) {
+                // 如果元素为json数组，则读取数据列表并保存
+                list.add(jsonArrayToList((JSONArray) value));
+            }
+        }
+        return list;
+    }
 
     /**
      * 获取ContentType

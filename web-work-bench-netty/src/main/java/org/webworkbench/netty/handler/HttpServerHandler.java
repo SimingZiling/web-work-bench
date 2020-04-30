@@ -35,7 +35,7 @@ public class HttpServerHandler extends ChannelInboundHandlerAdapter {
             httpRequest.setParameter(RequestParser.parm(fullHttpRequest));
 
 
-            System.out.println(RequestParser.bodyParse(fullHttpRequest));
+            System.out.println(RequestParser.body(fullHttpRequest));
             System.out.println("该请求为Http请求");
         }
     }
