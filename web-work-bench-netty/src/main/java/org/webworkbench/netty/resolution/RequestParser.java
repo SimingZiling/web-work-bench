@@ -3,17 +3,16 @@ package org.webworkbench.netty.resolution;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import io.netty.buffer.ByteBuf;
 import io.netty.handler.codec.http.*;
+import io.netty.handler.codec.http.multipart.*;
 import io.netty.util.CharsetUtil;
 import org.webworkbench.netty.common.ContentType;
 import org.webworkbench.netty.converter.PrimitiveType;
 import org.webworkbench.web.request.HttpMethod;
 
-import javax.management.ObjectName;
-import java.lang.ref.PhantomReference;
+import java.io.*;
 import java.lang.reflect.Array;
-import java.rmi.MarshalledObject;
-import java.security.Key;
 import java.util.*;
 
 /**
@@ -95,7 +94,7 @@ public class RequestParser {
      * @param fullHttpRequest 完整请求
      * @return 请求参数
      */
-    public static Map<String,Object> body(FullHttpRequest fullHttpRequest){
+    public static Map<String,Object> body(FullHttpRequest fullHttpRequest) throws IOException {
         String contentType = getContentType(fullHttpRequest.headers());
         // 判断内容的类型
         if(ContentType.APPLICATION_JSON.toString().equals(contentType)){
@@ -106,8 +105,47 @@ public class RequestParser {
 //            return jsonObjectToMap(paramJsonObject);
             // 一行代码搞定
             return JSON.parseObject(paramJsonStr,Map.class);
+        }else if(ContentType.MULTIPART_FORM_DATA.toString().endsWith(contentType)){
+            HttpPostRequestDecoder decoder = new HttpPostRequestDecoder(new DefaultHttpDataFactory(false), fullHttpRequest);
+            List<InterfaceHttpData> httpPostData = decoder.getBodyHttpDatas();
+            Map<String,Object> paramMap = new HashMap<String, Object>();
+            for (InterfaceHttpData interfaceHttpData : httpPostData){
+                if(interfaceHttpData.getHttpDataType() == InterfaceHttpData.HttpDataType.Attribute){
+                    MemoryAttribute attribute = (MemoryAttribute) interfaceHttpData;
+                    paramMap.put(interfaceHttpData.getName(),attribute.getValue());
+//                    System.out.println("key ="+interfaceHttpData.getName() + " v = " +attribute.getValue());
+                }else if(interfaceHttpData.getHttpDataType() == InterfaceHttpData.HttpDataType.FileUpload){
+                    FileUpload httpFileUpload = (FileUpload) interfaceHttpData;
+                    org.webworkbench.web.request.FileUpload fileUpload = new org.webworkbench.web.request.FileUpload();
+                    fileUpload.setBytes(httpFileUpload.get());
+                    fileUpload.setFileName(httpFileUpload.getFilename());
+                    fileUpload.setFileType(httpFileUpload.getContentType());
+                    paramMap.put(interfaceHttpData.getName(),fileUpload);
+                }
+            }
+            return paramMap;
+//            System.out.println(fullHttpRequest.content().toString(CharsetUtil.UTF_8));
         }
         return null;
+    }
+
+    public static void uploud(byte[] bytes){
+        String filepath ="E:\\" + "a.jpg";
+
+        File file  = new File(filepath);
+        if(file.exists()){
+            file.delete();
+        }
+        try {
+            FileOutputStream fos = new FileOutputStream(file);
+            fos.write(bytes,0,bytes.length);
+            fos.flush();
+            fos.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     /**
