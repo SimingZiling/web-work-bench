@@ -3,7 +3,6 @@ package org.webworkbench.netty.resolution;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import io.netty.buffer.ByteBuf;
 import io.netty.handler.codec.http.*;
 import io.netty.handler.codec.http.multipart.*;
 import io.netty.util.CharsetUtil;
@@ -96,6 +95,7 @@ public class RequestParser {
      */
     public static Map<String,Object> body(FullHttpRequest fullHttpRequest) throws IOException {
         String contentType = getContentType(fullHttpRequest.headers());
+        System.out.println(contentType);
         // 判断内容的类型
         if(ContentType.APPLICATION_JSON.toString().equals(contentType)){
             // 内容为json格式
@@ -125,6 +125,15 @@ public class RequestParser {
             }
             return paramMap;
 //            System.out.println(fullHttpRequest.content().toString(CharsetUtil.UTF_8));
+        }else if(ContentType.APPLICATION_FORM_URLENCODED.toString().endsWith(contentType)){
+            HttpPostRequestDecoder decoder = new HttpPostRequestDecoder(new DefaultHttpDataFactory(true), fullHttpRequest);
+            List<InterfaceHttpData> httpPostData = decoder.getBodyHttpDatas();
+            Map<String,Object> paramMap = new HashMap<String, Object>();
+            for (InterfaceHttpData interfaceHttpData : httpPostData){
+                MemoryAttribute attribute = (MemoryAttribute) interfaceHttpData;
+                paramMap.put(interfaceHttpData.getName(),attribute.getValue());
+            }
+            return paramMap;
         }
         return null;
     }
