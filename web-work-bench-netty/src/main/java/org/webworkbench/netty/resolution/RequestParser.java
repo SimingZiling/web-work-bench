@@ -138,24 +138,24 @@ public class RequestParser {
         return null;
     }
 
-    public static void uploud(byte[] bytes){
-        String filepath ="E:\\" + "a.jpg";
-
-        File file  = new File(filepath);
-        if(file.exists()){
-            file.delete();
-        }
-        try {
-            FileOutputStream fos = new FileOutputStream(file);
-            fos.write(bytes,0,bytes.length);
-            fos.flush();
-            fos.close();
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
+//    public static void uploud(byte[] bytes){
+//        String filepath ="E:\\" + "a.jpg";
+//
+//        File file  = new File(filepath);
+//        if(file.exists()){
+//            file.delete();
+//        }
+//        try {
+//            FileOutputStream fos = new FileOutputStream(file);
+//            fos.write(bytes,0,bytes.length);
+//            fos.flush();
+//            fos.close();
+//        } catch (FileNotFoundException e) {
+//            e.printStackTrace();
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//    }
 
     /**
      * json转换为map数据
