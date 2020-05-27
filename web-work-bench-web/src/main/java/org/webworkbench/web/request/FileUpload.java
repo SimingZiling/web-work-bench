@@ -2,7 +2,6 @@ package org.webworkbench.web.request;
 
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
@@ -39,9 +38,9 @@ public class FileUpload {
     }
 
     public void write(File file) throws IOException {
-        if(file.exists()){
-            // TODO 提示文件已经存在！
-        }
+//        if(file.exists()){
+//            // TODO 提示文件已经存在！
+//        }
         FileOutputStream fos = new FileOutputStream(file);
         fos.write(bytes,0,bytes.length);
         fos.flush();

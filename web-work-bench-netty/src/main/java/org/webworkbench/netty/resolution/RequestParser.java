@@ -112,15 +112,16 @@ public class RequestParser {
             for (InterfaceHttpData interfaceHttpData : httpPostData){
                 if(interfaceHttpData.getHttpDataType() == InterfaceHttpData.HttpDataType.Attribute){
                     MemoryAttribute attribute = (MemoryAttribute) interfaceHttpData;
-                    paramMap.put(interfaceHttpData.getName(),attribute.getValue());
-//                    System.out.println("key ="+interfaceHttpData.getName() + " v = " +attribute.getValue());
+                    paramSuperposition(paramMap,interfaceHttpData.getName(),attribute.getValue());
+//                    paramMap.put(interfaceHttpData.getName(),attribute.getValue());
                 }else if(interfaceHttpData.getHttpDataType() == InterfaceHttpData.HttpDataType.FileUpload){
                     FileUpload httpFileUpload = (FileUpload) interfaceHttpData;
                     org.webworkbench.web.request.FileUpload fileUpload = new org.webworkbench.web.request.FileUpload();
                     fileUpload.setBytes(httpFileUpload.get());
                     fileUpload.setFileName(httpFileUpload.getFilename());
                     fileUpload.setFileType(httpFileUpload.getContentType());
-                    paramMap.put(interfaceHttpData.getName(),fileUpload);
+                    paramSuperposition(paramMap,interfaceHttpData.getName(),fileUpload);
+//                    paramMap.put(interfaceHttpData.getName(),fileUpload);
                 }
             }
             return paramMap;
@@ -130,32 +131,44 @@ public class RequestParser {
             List<InterfaceHttpData> httpPostData = decoder.getBodyHttpDatas();
             Map<String,Object> paramMap = new HashMap<String, Object>();
             for (InterfaceHttpData interfaceHttpData : httpPostData){
-                MemoryAttribute attribute = (MemoryAttribute) interfaceHttpData;
-                paramMap.put(interfaceHttpData.getName(),attribute.getValue());
+                Attribute  attribute = (Attribute) interfaceHttpData;
+                paramSuperposition(paramMap,interfaceHttpData.getName(),attribute.getValue());
+
             }
             return paramMap;
         }
         return null;
     }
 
-//    public static void uploud(byte[] bytes){
-//        String filepath ="E:\\" + "a.jpg";
-//
-//        File file  = new File(filepath);
-//        if(file.exists()){
-//            file.delete();
-//        }
-//        try {
-//            FileOutputStream fos = new FileOutputStream(file);
-//            fos.write(bytes,0,bytes.length);
-//            fos.flush();
-//            fos.close();
-//        } catch (FileNotFoundException e) {
-//            e.printStackTrace();
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-//    }
+    /**
+     * 参数叠加
+     * @param paramMap 参数map
+     * @param key 参数
+     * @param value 值
+     */
+    private static void paramSuperposition(Map<String, Object> paramMap, String key, Object value){
+        // 判断参数是否存在 如果不存在则直接添加参数，如果存在则将参数转换为list
+        if(paramMap.containsKey(key)){
+            List<Object> paramList;
+            // 判断参数是否为列表 是则直接将值赋予参数列表，不是则新创建参数列表并将旧值添加进去
+            Object param = paramMap.get(key);
+            if(param instanceof ArrayList){
+                paramList = (List<Object>) param;
+            }else {
+                paramList = new ArrayList<Object>();
+                paramList.add(param);
+            }
+            // 添加值
+            paramList.add(value);
+            // 删除旧参数
+            paramMap.remove(key);
+            // 添加新参数
+            paramMap.put(key,paramList);
+        }else {
+            paramMap.put(key,value);
+        }
+    }
+
 
     /**
      * json转换为map数据

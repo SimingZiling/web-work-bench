@@ -3,13 +3,10 @@ package org.webworkbench.netty.handler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.http.FullHttpRequest;
-import io.netty.handler.codec.http.HttpMethod;
 import org.webworkbench.netty.resolution.RequestParser;
 import org.webworkbench.web.request.HttpRequest;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 
 public class HttpServerHandler extends ChannelInboundHandlerAdapter {
 
